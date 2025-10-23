@@ -1,0 +1,42 @@
+# Arquivos de Segredos e Configuração
+.env
+*.env
+
+# Banco de dados
+db.sqlite3
+*.sqlite3
+
+# Pastas de cache e compilados do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambiente Virtual
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Arquivos de IDE e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de log
+*.log
+
+# Relatórios de teste e cobertura
+.coverage
+htmlcov/
+
+# Arquivos estáticos coletados
+staticfiles/
+
+# Arquivos de mídia (uploads de usuários)
+media/
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
