@@ -14,8 +14,9 @@ class Vendedor(models.Model):
     def __str__(self):
         return f"{self.nome} {self.sobrenome}"
     
+    @property
     def vendas_realizadas(self):
-        return Pedidos.objects.filter(produto__vendedor=self).count()
+        return self.vendas.count()
     
 class Cliente(models.Model):
     id = models.AutoField(primary_key=True)
@@ -25,7 +26,6 @@ class Cliente(models.Model):
     telefone = models.CharField(max_length=15)
     endereco = models.CharField(max_length=255)
     fatura = models.DecimalField(max_digits=10, decimal_places=2)
-    historico_compras = models.TextField()
     data_cadastro = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -34,10 +34,21 @@ class Cliente(models.Model):
     def get_full_address(self):
         return self.endereco
     
+    @property
     def produtos_comprados(self):
-        return self.historico_compras.split(',')
+        # Calcula dinamicamente a quantidade de pedidos (vendas)
+        return self.pedidos.count()
+
+    def atualizar_fatura(self):
+        # Soma o total de todos os pedidos (vendas) associados a este cliente
+        total_pedidos = self.pedidos.aggregate(
+            total_fatura=Sum('total')
+        )['total_fatura']
+        
+        self.fatura = total_pedidos if total_pedidos is not None else 0.00
+        self.save(update_fields=['fatura'])
     
-class Pedido(models.Model): 
+class Venda(models.Model): 
     STATUS_CHOICES = [
         ('Pendente', 'Pendente'),
         ('Entregue', 'Entregue'),
@@ -87,7 +98,7 @@ class Categoria(models.Model):
         return self.nome
 
 class ItemPedido(models.Model):
-    pedido = models.ForeignKey(Pedido, related_name='itens', on_delete=models.CASCADE)
+    pedido = models.ForeignKey(Venda, related_name='itens', on_delete=models.CASCADE)
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
     quantidade = models.PositiveIntegerField(default=1)
     preco_unitario = models.DecimalField(max_digits=10, decimal_places=2) # Price at the time of order

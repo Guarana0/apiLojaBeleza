@@ -1,7 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import VendedorViewSet
-from .views import ProdutoViewSet
+from .views import VendedorViewSet, ClienteViewSet, ItemPedidoViewSet, ItemPedidoDetalheViewSet, VendaViewSet, ProdutoViewSet
 
 router = DefaultRouter()
 
@@ -9,7 +8,15 @@ router = DefaultRouter()
 #/api/vendedores/{id}/ get, patch, delete e put
 router.register(r'vendedores', VendedorViewSet, basename='vendedor')
 
-router.register(r'produtos', ProdutoViewSet, basename='produtos')
+router.register(r'clientes', ClienteViewSet, basename='clientes')
+
+router.register(r'itemPedido', ItemPedidoViewSet, basename='itemPedidos')
+
+router.register(r'itemPedidoDetalhe', ItemPedidoDetalheViewSet, basename='itemPedidosDetalhes')
+
+router.register(r'venda', VendaViewSet, basename='vendas')
+
+router.register(r'produto', ProdutoViewSet, basename='produtos')
 
 urlpatterns = [
     path('', include(router.urls)),
