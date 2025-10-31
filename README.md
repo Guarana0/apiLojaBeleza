@@ -80,6 +80,14 @@ Siga os passos abaixo para iniciar o projeto em seu ambiente local:
     
     O servidor estará rodando em `http://127.0.0.1:8000/`.
 
+   7️⃣ **Criar Superusuario**
+
+   ```bash
+  python manage.py createsuperuser
+   ```
+
+Isso é nescessario para a url `/admin/` e `/auth/login/`
+
 ## Rotas da API
 
 A API está disponível sob o prefixo `/api/`.
@@ -88,5 +96,5 @@ A API está disponível sob o prefixo `/api/`.
 
 Após iniciar o servidor, você pode testar os endpoints de duas formas:
 
-1.  **API Navegável do DRF:** Simplesmente acesse `http://127.0.0.1:8000/api/vendedores/` no seu navegador para ver a interface interativa.
+1.  **API Navegável do DRF:** Simplesmente acesse `http://127.0.0.1:8000/api/vendedores/` no seu navegador para ver a interface interativa. (é nescessario fazer login com um super usuario para acessar)
 2.  **Ferramentas de Cliente API:** Use ferramentas como [Postman](https://www.postman.com/) ou [Insomnia](https://insomnia.rest/) para fazer requisições `GET`, `POST`, `PUT`, `DELETE`, etc.
