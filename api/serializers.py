@@ -1,9 +1,27 @@
 from rest_framework import serializers
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from .models import Vendedor
 from .models import Venda
 from .models import Cliente
 from .models import ItemPedido
 from .models import Produto
+
+class ProdutoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Produto
+        fields = ['id', 'nome', 'descricao', 'preco', 'estoque', 'categoria', 'data_adicao', 'data_atualizacao', 'ativo']
+        read_only_fields =  ['data_adicao', 'data_atualizacao', 'ativo']
+        
+        def create(self, validated_data):
+            estoque = validated_data.get('estoque', 0)
+            if estoque <= 0:
+                validated_data['ativo'] = False
+            else:
+                validated_data['ativo'] = True
+            
+            produto = super().create(validated_data)
+            return produto
+
 
 class VendedorSerializer(serializers.ModelSerializer):
     vendas_realizadas = serializers.ReadOnlyField()
@@ -22,83 +40,33 @@ class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
         fields = ['id', 'nome', 'sobrenome', 'email', 'telefone', 'endereco', 'fatura', 'produtos_comprados', 'data_cadastro']
-        read_only_fields = ['fatura', 'produtos_comprados']
+        read_only_fields = ['produtos_comprados', 'fatura']
         
-        def update(self, validate_data):
-            produto_comprado = []
-            produto_comprado.append[Produto]
+        def create(self, validated_data):
+            validated_data['fatura'] = 0
+            return super().create(validated_data)
         
 class ItemPedidoSerializer(serializers.ModelSerializer):
+    # Para leitura (GET), exibe todos os detalhes do produto.
+    produto = ProdutoSerializer(read_only=True)
+    # Para escrita (POST), espera apenas o ID do produto.
+    produto_id = serializers.PrimaryKeyRelatedField(
+        queryset=Produto.objects.all(), source='produto', write_only=True
+    )
+
     class Meta:
         model = ItemPedido
-        fields = ['produto', 'quantidade']
+        fields = ['produto', 'produto_id', 'quantidade']
         
-class ItemPedidoDetalheSerializer(serializers.ModelSerializer):
-    produto = serializers.StringRelatedField()
-    class Meta:
-        model = ItemPedido
-        fields = ['produto', 'quantidade', 'preco_unitario']
-        
-# codigo feito com IA, provavelmente deve dar para melhorar        
-class VendaSerializer(serializers.ModelSerializer):
-    itens = ItemPedidoSerializer(many=True, write_only=True)
-    itens_detalhe = ItemPedidoDetalheSerializer(source='itens', many=True, read_only=True)
+      
+class VendaSerializer(WritableNestedModelSerializer):
+    itens = ItemPedidoSerializer(many=True)
     cliente = serializers.StringRelatedField(read_only=True)
-    # Para criar (POST): Recebe o ID do cliente. É mais eficiente e seguro.
     cliente_id = serializers.PrimaryKeyRelatedField(
         queryset=Cliente.objects.all(), source='cliente', write_only=True
     )
     
     class Meta:
         model = Venda
-        fields = ['id', 'cliente', 'cliente_id', 'vendedor', 'data_pedido', 'status', 'total', 'itens', 'itens_detalhe']
-        read_only_fields = ['total', 'data_pedido', 'status']
-        
-        def create(self, validated_data):
-            itens_data = validated_data.pop('itens')
-            venda = Venda.objects.create(**validated_data)
-            
-            total_venda = 0
-            
-            for item_data in itens_data:
-                produto = item_data['produto']
-                quantidade = item_data['quantidade']
-
-                if produto.estoque < quantidade:
-                    venda.delete()
-                    raise serializers.ValidationError('Não temos essa quantidade do produto no estoque')
-                
-                ItemPedido.objects.create(
-                    pedido=venda,
-                    produto=produto,
-                    quantidade=quantidade,
-                    preco_unitario=produto.preco
-                )
-                total_venda += produto.preco * quantidade
-                produto.estoque -= quantidade
-                produto.save()
-            
-            venda_total = total_venda
-            venda.save()
-            
-            venda.cliente.atualizar_fatura()
-            
-            return venda
-
-class ProdutoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Produto
-        fields = ['id', 'nome', 'descricao', 'preco', 'estoque', 'categoria', 'data_adicao', 'data_atualizacao', 'ativo']
-        read_only_fields =  ['data_adicao', 'data_atualizacao', 'ativo']
-        
-        def create(self, validated_data):
-            estoque = validated_data.get('estoque', 0)
-            if estoque <= 0:
-                validated_data['ativo'] = False
-            else:
-                validated_data['ativo'] = True
-            
-            produto = super().create(validated_data)
-            return produto
-
-    
+        fields = ['id', 'cliente', 'cliente_id', 'vendedor', 'data_pedido', 'status', 'total', 'itens']
+        read_only_fields = ['total', 'data_pedido', 'status', 'cliente']

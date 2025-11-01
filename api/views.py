@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from .serializers import VendedorSerializer, ClienteSerializer, ItemPedidoSerializer, ItemPedidoDetalheSerializer, VendaSerializer, ProdutoSerializer
+from .serializers import VendedorSerializer, ClienteSerializer, ItemPedidoSerializer, VendaSerializer, ProdutoSerializer
 
 from .models import Vendedor, Cliente, ItemPedido, Venda, Produto
 
@@ -17,9 +17,6 @@ class ItemPedidoViewSet(viewsets.ModelViewSet):
     queryset = ItemPedido.objects.all()
     serializer_class = ItemPedidoSerializer
     
-class ItemPedidoDetalheViewSet(viewsets.ModelViewSet):
-    queryset = ItemPedido.objects.all()
-    serializer_class = ItemPedidoDetalheSerializer
     
 class VendaViewSet(viewsets.ModelViewSet):
     queryset = Venda.objects.all()

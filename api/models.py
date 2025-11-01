@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from config import settings
 
 # Create your models here.
@@ -36,8 +37,11 @@ class Cliente(models.Model):
     
     @property
     def produtos_comprados(self):
-        # Calcula dinamicamente a quantidade de pedidos (vendas)
-        return self.pedidos.count()
+    # Soma a quantidade de todos os itens em todos os pedidos do cliente
+        total_itens = self.pedidos.aggregate(
+            total=Sum('itens__quantidade')
+        )['total']
+        return total_itens if total_itens is not None else 0
 
     def atualizar_fatura(self):
         # Soma o total de todos os pedidos (vendas) associados a este cliente
@@ -101,7 +105,12 @@ class ItemPedido(models.Model):
     pedido = models.ForeignKey(Venda, related_name='itens', on_delete=models.CASCADE)
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
     quantidade = models.PositiveIntegerField(default=1)
-    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2) # Price at the time of order
+    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2, blank=True) # Price at the time of order
+
+    def save(self, *args, **kwargs):
+        if not self.preco_unitario:
+            self.preco_unitario = self.produto.preco
+        super().save(*args, **kwargs)
 
     def get_total(self):
         return self.preco_unitario * self.quantidade
